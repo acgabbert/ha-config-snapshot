@@ -1,0 +1,54 @@
+# Backup archives and anything extracted from them. Keep backups outside the
+# repository; these patterns are a second net.
+*.tar
+*.tar.gz
+*.tgz
+/backups/
+/extract/
+
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+/.venv/
+
+# Never captured, even if a later allowlist change slips them into config/.
+secrets.yaml
+**/.storage/auth*
+**/.storage/onboarding
+**/.storage/core.config
+**/.storage/core.config_entries
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# config/ is the snapshot written by scripts/import-backup.py. Ignore
+# everything in it, then re-include only what import-allowlist.toml selects.
+# The importer is the real allowlist; this keeps stray files out of commits.
+# When you add to import-allowlist.toml, add the matching re-include here.
+/config/**
+!/config/**/
+!/config/*.yaml
+!/config/packages/**/*.yaml
+!/config/packages/**/*.yml
+!/config/blueprints/**/*.yaml
+!/config/blueprints/**/*.yml
+!/config/custom_components/*/manifest.json
+!/config/.storage/core.device_registry
+!/config/.storage/core.entity_registry
+!/config/.storage/core.area_registry
+!/config/.storage/core.floor_registry
+!/config/.storage/core.label_registry
+!/config/.storage/core.config_entries.summary.json
+!/config/.storage/input_*
+!/config/.storage/counter
+!/config/.storage/timer
+!/config/.storage/schedule
+!/config/.storage/lovelace
+!/config/.storage/lovelace.*
+!/config/.storage/lovelace_dashboards
+!/config/.storage/lovelace_resources
+# Re-ignore after the broad *.yaml include.
+/config/secrets.yaml

@@ -1,0 +1,60 @@
+name: gitleaks
+
+# Second net behind the importer's sensitive-value scan and the pre-commit hook.
+# Pushes to main and pull requests only, so a push to a PR branch runs once.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The scan only reads the checkout. Keep the token read-only, in case the job
+# runs on a shared self-hosted runner that other repositories' jobs can reach.
+permissions:
+  contents: read
+
+concurrency:
+  group: gitleaks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    # GitHub-hosted by default. To use your own runner, set the CI_RUNS_ON
+    # repository variable to a JSON runs-on value, e.g. ["self-hosted","ci"].
+    # Do not use a self-hosted runner on a public repository: pull requests
+    # from forks could run code on it.
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Full history, so every commit is scanned, not just the tip. A
+          # shallow clone is the usual cause of gitleaks failing on push events.
+          fetch-depth: 0
+          persist-credentials: false
+
+      # The gitleaks CLI in its official image, instead of gitleaks-action:
+      # no Node, no license key, and the same command as the pre-commit hook.
+      # Docker must be available on the runner (it is on GitHub-hosted runners).
+      # --config points at the repository's rules (Discord webhook,
+      # user:password@ URLs); change the path if the file is named differently.
+      # The GIT_CONFIG_* variables mark the mount as a safe directory: the
+      # container's user doesn't own the checkout, and git refuses to read a
+      # repository owned by someone else ("dubious ownership").
+      - name: Scan history
+        run: |
+          docker run --rm --network none \
+            -e GIT_CONFIG_COUNT=1 \
+            -e GIT_CONFIG_KEY_0=safe.directory \
+            -e GIT_CONFIG_VALUE_0='*' \
+            -v "$GITHUB_WORKSPACE:/repo:ro" \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git /repo --config /repo/.gitleaks.toml \
+              --redact --no-banner --verbose --exit-code 1
+
+      # The snapshot holds presence logic, device names, MACs and LAN IPs. On
+      # a persistent self-hosted runner, don't leave a checkout behind for other
+      # repositories' jobs to read.
+      - name: Remove the checkout
+        if: always() && runner.environment == 'self-hosted'
+        run: find "$GITHUB_WORKSPACE" -mindepth 1 -delete

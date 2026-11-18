@@ -1,0 +1,17 @@
+# Second net behind scripts/import-backup.py's sensitive-value scan.
+title = "home-assistant-snapshot"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "discord-webhook-url"
+description = "Discord webhook URL (the URL is the credential)"
+regex = '''https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/\d+/[\w-]+'''
+keywords = ["discord"]
+
+[[rules]]
+id = "url-embedded-password"
+description = "URL with user:password@"
+regex = '''[a-z][a-z0-9+.-]*://[^\s"'@/:]+:[^\s"'@/]+@[^\s"'/]+'''
+keywords = ["://"]

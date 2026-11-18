@@ -1,0 +1,41 @@
+# What scripts/import-backup.py copies from a backup's /config into config/.
+#
+# This file is a review boundary. Before adding a path, open it in a real
+# backup and confirm it holds no credentials or personal data the scan would
+# miss. Adding a path here also needs a matching re-include line in .gitignore,
+# or git will ignore the new files.
+#
+# Not configurable here, on purpose (they live in the importer):
+# - paths that are never captured (secrets.yaml, .storage/auth*,
+#   .storage/core.config, .storage/onboarding, .cloud/);
+# - .storage/core.config_entries, which is always reduced to a summary;
+# - custom_components/*/manifest.json, which is always reduced to metadata.
+
+[yaml]
+# Read in full, then followed through !include and !include_dir_*.
+entry_points = [
+  "configuration.yaml",
+  "automations.yaml",
+  "scripts.yaml",
+  "scenes.yaml",
+]
+# Every .yaml/.yml file under these top-level directories.
+dirs = ["packages", "blueprints"]
+
+[storage]
+# Files directly under .storage/, matched by exact name.
+exact = [
+  "core.device_registry",
+  "core.entity_registry",
+  "core.area_registry",
+  "core.floor_registry",
+  "core.label_registry",
+  "counter",
+  "timer",
+  "schedule",
+  "lovelace",
+  "lovelace_dashboards",
+  "lovelace_resources",
+]
+# Files directly under .storage/, matched by glob.
+globs = ["input_*", "lovelace.*"]

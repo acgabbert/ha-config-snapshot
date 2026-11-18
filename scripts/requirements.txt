@@ -1,0 +1,6 @@
+# Needed only for encrypted (protected) backups. Pin the exact version after
+# the first successful import against a real backup.
+securetar
+
+# Audit and inventory scripts (scripts/snapshot.py).
+PyYAML==6.0.2
